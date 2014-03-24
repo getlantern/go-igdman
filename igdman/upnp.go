@@ -115,7 +115,13 @@ func (igd *upnpIGD) extractFromStatusResponse(resp string, label string) (string
 		return "", fmt.Errorf("%s not available from upnpc", label)
 	}
 	resp = resp[i+len(label):]
-	s := strings.Index(resp, "\n")
+	// Look for either carriage return (windows) or line feed (unix)
+	sr := strings.Index(resp, "\r")
+	sn := strings.Index(resp, "\n")
+	s := sr
+	if sr < 0 {
+		s = sn
+	}
 	if s < 0 {
 		return "", fmt.Errorf("Unable to find newline after %s", label)
 	}
