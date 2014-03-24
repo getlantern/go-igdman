@@ -7,21 +7,15 @@
 //
 // Basic Usage:
 //
-//    import (
-//        "github.com/oxtoacart/go-igdman/igdman"
-//        "log"
-//    )
 //
-//    func main() {
-//        igd, err := igdman.NewIGD()
-//        if err != nil {
-//            log.Fatalf("Unable to get IGD: %s", err)
-//        }
-//        err := igd.AddPortMapping(TCP, "192.168.1.210", 80, 8080, 0)
-//        if err != nil {
-//            log.Fatalf("Unable to map port: %s", err)
-//        }
-//    }
+//  igd, err := igdman.NewIGD()
+//  if err != nil {
+//      log.Fatalf("Unable to get IGD: %s", err)
+//  }
+//  err := igd.AddPortMapping(TCP, "192.168.1.210", 80, 8080, 0)
+//  if err != nil {
+//      log.Fatalf("Unable to map port: %s", err)
+//  }
 //
 package igdman
 
