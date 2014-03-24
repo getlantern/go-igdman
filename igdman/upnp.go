@@ -13,14 +13,14 @@ const (
 	EXTERNAL_IP_ADDRESS_LABEL = "ExternalIPAddress = "
 )
 
-type UPNPIGD struct {
+type upnpIGD struct {
 	upnpc      *byteexec.ByteExec
 	igdUrl     string
 	internalIP string
 	externalIP string
 }
 
-func NewUPNPIGD() (igd *UPNPIGD, err error) {
+func newUpnpIGD() (igd *upnpIGD, err error) {
 	upnpcBytes, err := Asset("upnpc")
 	if err != nil {
 		return nil, err
@@ -29,10 +29,10 @@ func NewUPNPIGD() (igd *UPNPIGD, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return &UPNPIGD{upnpc: be}, nil
+	return &upnpIGD{upnpc: be}, nil
 }
 
-func (igd *UPNPIGD) GetExternalIP() (ip string, err error) {
+func (igd *upnpIGD) GetExternalIP() (ip string, err error) {
 	err = igd.updateStatus()
 	if err != nil {
 		return "", err
@@ -40,7 +40,7 @@ func (igd *UPNPIGD) GetExternalIP() (ip string, err error) {
 	return igd.externalIP, nil
 }
 
-func (igd *UPNPIGD) AddPortMapping(proto protocol, internalIP string, internalPort int, externalPort int, duration time.Duration) error {
+func (igd *upnpIGD) AddPortMapping(proto protocol, internalIP string, internalPort int, externalPort int, duration time.Duration) error {
 	if err := igd.updateStatus(); err != nil {
 		return fmt.Errorf("Unable to add port mapping: %s", err)
 	}
@@ -59,7 +59,7 @@ func (igd *UPNPIGD) AddPortMapping(proto protocol, internalIP string, internalPo
 	}
 }
 
-func (igd *UPNPIGD) RemovePortMapping(proto protocol, externalPort int) error {
+func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
 	if err := igd.updateStatus(); err != nil {
 		return fmt.Errorf("Unable to add port mapping: %s", err)
 	}
@@ -76,7 +76,7 @@ func (igd *UPNPIGD) RemovePortMapping(proto protocol, externalPort int) error {
 }
 
 // updateStatus updates the IGD's status fields
-func (igd *UPNPIGD) updateStatus() error {
+func (igd *upnpIGD) updateStatus() error {
 	skipDiscovery := igd.igdUrl != ""
 	params := []string{"-s"}
 	if skipDiscovery {
@@ -93,19 +93,19 @@ func (igd *UPNPIGD) updateStatus() error {
 		}
 	}
 	resp := string(out)
-	if igd.igdUrl, err = extractFromStatusResponse(resp, IGD_URL_LABEL); err != nil {
+	if igd.igdUrl, err = igd.extractFromStatusResponse(resp, IGD_URL_LABEL); err != nil {
 		return err
 	}
-	if igd.internalIP, err = extractFromStatusResponse(resp, LOCAL_IP_ADDRESS_LABEL); err != nil {
+	if igd.internalIP, err = igd.extractFromStatusResponse(resp, LOCAL_IP_ADDRESS_LABEL); err != nil {
 		return err
 	}
-	if igd.externalIP, err = extractFromStatusResponse(resp, EXTERNAL_IP_ADDRESS_LABEL); err != nil {
+	if igd.externalIP, err = igd.extractFromStatusResponse(resp, EXTERNAL_IP_ADDRESS_LABEL); err != nil {
 		return err
 	}
 	return nil
 }
 
-func extractFromStatusResponse(resp string, label string) (string, error) {
+func (igd *upnpIGD) extractFromStatusResponse(resp string, label string) (string, error) {
 	i := strings.Index(resp, label)
 	if i < 0 {
 		return "", fmt.Errorf("%s not available from upnpc", label)

@@ -22,7 +22,7 @@ func TestExternalIP(t *testing.T) {
 		t.Fatalf("Please set the environment variable EXTERNAL_IP to provide your expected public IP address")
 	}
 
-	igd, err := NewUPNPIGD()
+	igd, err := newUpnpIGD()
 	if err != nil {
 		t.Fatalf("Unable to create IGD: %s", err)
 	}
@@ -49,7 +49,7 @@ func TestExternalIP(t *testing.T) {
 func TestMapping(t *testing.T) {
 	port := 15067
 
-	igd, err := NewUPNPIGD()
+	igd, err := newUpnpIGD()
 	if err != nil {
 		t.Fatalf("Unable to create IGD: %s", err)
 	}

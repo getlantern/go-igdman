@@ -1,5 +1,9 @@
 package igdman
 
+import (
+	"time"
+)
+
 type protocol string
 
 const (
@@ -8,9 +12,9 @@ const (
 )
 
 type IGD interface {
-	GetPublicIP() (ip string, err error)
+	GetExternalIP() (ip string, err error)
 
-	AddPortMapping(proto protocol, internalIp string, internalPort int, externalPort int) error
+	AddPortMapping(proto protocol, internalIP string, internalPort int, externalPort int, duration time.Duration) error
 
 	RemovePortMapping(proto protocol, externalPort int) error
 }
