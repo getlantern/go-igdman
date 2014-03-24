@@ -117,7 +117,6 @@ func TestMapping(t *testing.T) {
 
 	// Remove port mapping
 	err = igd.RemovePortMapping(TCP, port)
-	time.Sleep(2000)
 	if err != nil {
 		t.Fatalf("Unable to remove port mapping: %s", err)
 	}
