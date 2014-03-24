@@ -5,3 +5,10 @@ To install:
 For docs:
 
 [`godoc github.com/oxtoacart/go-igdman/igdman`](https://godoc.org/github.com/oxtoacart/go-igdman/igdman)
+
+Acknowledgements:
+
+igdman is just an wrapper around:
+
+- [miniupnpc](https://github.com/miniupnp/miniupnp)
+- [go-nat-pmp](https://code.google.com/p/go-nat-pmp/)

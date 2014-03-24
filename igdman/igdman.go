@@ -5,8 +5,10 @@
 // igdman uses either UPnP or NAT-PMP, depending on what's discovered on the
 // network.
 //
-// Basic Usage:
+// Internally, igdman uses miniupnpc(https://github.com/miniupnp/miniupnp) and
+// go-nat-pmp(https://code.google.com/p/go-nat-pmp/).
 //
+// Basic Usage:
 //
 //  igd, err := igdman.NewIGD()
 //  if err != nil {
