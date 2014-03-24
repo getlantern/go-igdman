@@ -22,10 +22,12 @@ func TestExternalIP(t *testing.T) {
 		t.Fatalf("Please set the environment variable EXTERNAL_IP to provide your expected public IP address")
 	}
 
-	igd, err := newUpnpIGD()
+	igd, err := NewIGD()
 	if err != nil {
 		t.Fatalf("Unable to create IGD: %s", err)
 	}
+	defer igd.Close()
+
 	start := time.Now()
 	publicIp, err := igd.GetExternalIP()
 	if err != nil {
@@ -49,10 +51,11 @@ func TestExternalIP(t *testing.T) {
 func TestMapping(t *testing.T) {
 	port := 15067
 
-	igd, err := newUpnpIGD()
+	igd, err := NewIGD()
 	if err != nil {
 		t.Fatalf("Unable to create IGD: %s", err)
 	}
+	defer igd.Close()
 
 	externalIP, err := igd.GetExternalIP()
 	if err != nil {
@@ -88,7 +91,12 @@ func TestMapping(t *testing.T) {
 	}()
 
 	// Add port mapping
-	err = igd.AddPortMapping(TCP, igd.internalIP, port, port, 0)
+	internalIP, err := getFirstNonLoopbackAdapterAddr()
+	if err != nil {
+		t.Fatalf("Unable to get internal ip: %s", err)
+	}
+
+	err = igd.AddPortMapping(TCP, internalIP, port, port, 0)
 	if err != nil {
 		t.Fatalf("Unable to add port mapping: %s", err)
 	}
@@ -124,4 +132,25 @@ func TestMapping(t *testing.T) {
 	if err == nil {
 		t.Errorf("Connecting to address with closed port mapping should have resulted in an error")
 	}
+}
+
+func getFirstNonLoopbackAdapterAddr() (string, error) {
+	name, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+
+	addrs, err := net.LookupHost(name)
+	if err != nil {
+		return "", err
+	}
+
+	for _, a := range addrs {
+		ip := net.ParseIP(a)
+		if !ip.IsLoopback() {
+			return a, nil
+		}
+	}
+
+	return "", fmt.Errorf("No non-loopback adapter found")
 }

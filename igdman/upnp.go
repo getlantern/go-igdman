@@ -75,6 +75,10 @@ func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
 	}
 }
 
+func (igd *upnpIGD) Close() error {
+	return igd.upnpc.Close()
+}
+
 // updateStatus updates the IGD's status fields
 func (igd *upnpIGD) updateStatus() error {
 	skipDiscovery := igd.igdUrl != ""
