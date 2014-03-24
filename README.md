@@ -4,4 +4,4 @@ To install:
 
 For docs:
 
-`godoc github.com/oxtoacart/go-igdman/igdman`
+[`godoc github.com/oxtoacart/go-igdman/igdman`](https://godoc.org/github.com/oxtoacart/go-igdman/igdman)
