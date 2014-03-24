@@ -40,7 +40,7 @@ func (igd *upnpIGD) GetExternalIP() (ip string, err error) {
 	return igd.externalIP, nil
 }
 
-func (igd *upnpIGD) AddPortMapping(proto protocol, internalIP string, internalPort int, externalPort int, duration time.Duration) error {
+func (igd *upnpIGD) AddPortMapping(proto protocol, internalIP string, internalPort int, externalPort int, expiration time.Duration) error {
 	if err := igd.updateStatus(); err != nil {
 		return fmt.Errorf("Unable to add port mapping: %s", err)
 	}
@@ -48,8 +48,8 @@ func (igd *upnpIGD) AddPortMapping(proto protocol, internalIP string, internalPo
 		"-url", igd.igdUrl,
 		"-a", internalIP, fmt.Sprintf("%d", internalPort), fmt.Sprintf("%d", externalPort), string(proto),
 	}
-	if duration > 0 {
-		params = append(params, fmt.Sprintf("%d", duration/time.Second))
+	if expiration > 0 {
+		params = append(params, fmt.Sprintf("%d", expiration/time.Second))
 	}
 	out, err := igd.upnpc.Command(params...).CombinedOutput()
 	if err != nil {
