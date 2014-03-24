@@ -62,6 +62,7 @@ func TestMapping(t *testing.T) {
 	// Run echo server
 	go func() {
 		l, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
+		defer l.Close()
 		if err != nil {
 			t.Fatalf("Unable to start server: %s", err)
 		}
