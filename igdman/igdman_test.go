@@ -134,7 +134,7 @@ func TestMapping(t *testing.T) {
 	}
 }
 
-func TestFailedMapping(t *testing.T) {
+func TestFailedAddMapping(t *testing.T) {
 	port := 15068
 
 	igd, err := NewIGD()
@@ -152,6 +152,19 @@ func TestFailedMapping(t *testing.T) {
 	err = igd.AddPortMapping(TCP, internalIP, port, 0, 0)
 	if err == nil {
 		t.Error("Adding mapping for bad port should have resulted in error")
+	}
+}
+
+func TestFailedRemoveMapping(t *testing.T) {
+	igd, err := NewIGD()
+	if err != nil {
+		t.Fatalf("Unable to create IGD: %s", err)
+	}
+	defer igd.Close()
+
+	err = igd.RemovePortMapping(TCP, -1)
+	if err == nil {
+		t.Error("Removing mapping for bad port should have resulted in error")
 	}
 }
 

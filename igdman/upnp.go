@@ -55,7 +55,7 @@ func (igd *upnpIGD) AddPortMapping(proto protocol, internalIP string, internalPo
 	out, err := igd.upnpc.Command(params...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("Unable to add port mapping: %s\n%s", err, out)
-	} else if strings.Index(string(out), "failed with") >= 0 {
+	} else if strings.Contains(string(out), "failed with") {
 		return fmt.Errorf("Unable to add port mapping: \n%s", out)
 	} else {
 		return nil
@@ -73,6 +73,8 @@ func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
 	out, err := igd.upnpc.Command(params...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("Unable to remove port mapping: %s\n%s", err, out)
+	} else if !strings.Contains(string(out), "UPNP_DeletePortMapping() returned : 0") {
+		return fmt.Errorf("Unable to remove port mapping: \n%s", out)
 	} else {
 		return nil
 	}
