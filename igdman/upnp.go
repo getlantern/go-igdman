@@ -2,9 +2,10 @@ package igdman
 
 import (
 	"fmt"
-	"github.com/oxtoacart/byteexec"
 	"strings"
 	"time"
+
+	"github.com/oxtoacart/byteexec"
 )
 
 const (
@@ -54,6 +55,8 @@ func (igd *upnpIGD) AddPortMapping(proto protocol, internalIP string, internalPo
 	out, err := igd.upnpc.Command(params...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("Unable to add port mapping: %s\n%s", err, out)
+	} else if strings.Index(string(out), "failed with") >= 0 {
+		return fmt.Errorf("Unable to add port mapping: \n%s", out)
 	} else {
 		return nil
 	}

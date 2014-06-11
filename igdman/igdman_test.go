@@ -134,6 +134,27 @@ func TestMapping(t *testing.T) {
 	}
 }
 
+func TestFailedMapping(t *testing.T) {
+	port := 15068
+
+	igd, err := NewIGD()
+	if err != nil {
+		t.Fatalf("Unable to create IGD: %s", err)
+	}
+	defer igd.Close()
+
+	// Add port mapping
+	internalIP, err := getFirstNonLoopbackAdapterAddr()
+	if err != nil {
+		t.Fatalf("Unable to get internal ip: %s", err)
+	}
+
+	err = igd.AddPortMapping(TCP, internalIP, port, 0, 0)
+	if err == nil {
+		t.Error("Adding mapping for bad port should have resulted in error")
+	}
+}
+
 func getFirstNonLoopbackAdapterAddr() (string, error) {
 	name, err := os.Hostname()
 	if err != nil {
