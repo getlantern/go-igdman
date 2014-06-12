@@ -14,7 +14,7 @@ type natpmpIGD struct {
 	client *natpmp.Client
 }
 
-func newNATPMPIGD() (igd *natpmpIGD, err error) {
+func NewNATPMPIGD() (igd *natpmpIGD, err error) {
 	ip, err := defaultGatewayIp()
 	if err != nil {
 		return nil, fmt.Errorf("Unable to find default gateway: %s", err)

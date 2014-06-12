@@ -23,7 +23,7 @@ type upnpIGD struct {
 	updateStatusMutex sync.Mutex
 }
 
-func newUpnpIGD() (igd *upnpIGD, err error) {
+func NewUpnpIGD() (igd *upnpIGD, err error) {
 	upnpcBytes, err := Asset("upnpc")
 	if err != nil {
 		return nil, err

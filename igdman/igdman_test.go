@@ -45,7 +45,7 @@ func TestFailedRemoveMapping_NATPMP(t *testing.T) {
 }
 
 func getUPnPIGD(t *testing.T) IGD {
-	igd, err := newUpnpIGD()
+	igd, err := NewUpnpIGD()
 	if err != nil {
 		t.Fatalf("Unable to create UPnPIGD: %s", err)
 	}
@@ -53,7 +53,7 @@ func getUPnPIGD(t *testing.T) IGD {
 }
 
 func getNATPMPIGD(t *testing.T) IGD {
-	igd, err := newNATPMPIGD()
+	igd, err := NewNATPMPIGD()
 	if err != nil {
 		t.Fatalf("Unable to create NATPMPIGD: %s", err)
 	}

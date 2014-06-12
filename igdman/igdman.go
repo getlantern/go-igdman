@@ -51,9 +51,9 @@ type IGD interface {
 
 // NewIGD obtains a new IGD (either UPnP or NAT-PMP, depending on what's available)
 func NewIGD() (igd IGD, err error) {
-	igd, err = newUpnpIGD()
+	igd, err = NewUpnpIGD()
 	if err != nil {
-		igd, err = newNATPMPIGD()
+		igd, err = NewNATPMPIGD()
 	}
 	return
 }
