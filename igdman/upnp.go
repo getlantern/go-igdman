@@ -32,7 +32,9 @@ func newUpnpIGD() (igd *upnpIGD, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return &upnpIGD{upnpc: be}, nil
+	igd = &upnpIGD{upnpc: be}
+	err = igd.updateStatus()
+	return
 }
 
 func (igd *upnpIGD) GetExternalIP() (ip string, err error) {
