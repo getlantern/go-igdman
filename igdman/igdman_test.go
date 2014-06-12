@@ -6,55 +6,86 @@ import (
 	"net"
 	"os"
 	"testing"
-	"time"
 )
 
 var (
 	PUBLIC_IP = "PUBLIC_IP"
 )
 
+func TestExternalIP_UPnP(t *testing.T) {
+	doTestExternalIP(t, getUPnPIGD(t))
+}
+
+func TestMapping_UPnP(t *testing.T) {
+	doTestMapping(t, getUPnPIGD(t))
+}
+
+func TestFailedAddMapping_UPnP(t *testing.T) {
+	doTestFailedAddMapping(t, getUPnPIGD(t))
+}
+
+func TestFailedRemoveMapping_UPnP(t *testing.T) {
+	doTestFailedRemoveMapping(t, getUPnPIGD(t))
+}
+
+func TestExternalIP_NATPMP(t *testing.T) {
+	doTestExternalIP(t, getNATPMPIGD(t))
+}
+
+func TestMapping_NATPMP(t *testing.T) {
+	doTestMapping(t, getNATPMPIGD(t))
+}
+
+func TestFailedAddMapping_NATPMP(t *testing.T) {
+	doTestFailedAddMapping(t, getNATPMPIGD(t))
+}
+
+func TestFailedRemoveMapping_NATPMP(t *testing.T) {
+	doTestFailedRemoveMapping(t, getNATPMPIGD(t))
+}
+
+func getUPnPIGD(t *testing.T) IGD {
+	igd, err := newUpnpIGD()
+	if err != nil {
+		t.Fatalf("Unable to create UPnPIGD: %s", err)
+	}
+	return igd
+}
+
+func getNATPMPIGD(t *testing.T) IGD {
+	igd, err := newNATPMPIGD()
+	if err != nil {
+		t.Fatalf("Unable to create NATPMPIGD: %s", err)
+	}
+	return igd
+}
+
 // TestExternalIP only works when there is a valid IGD device with an external
 // IP.  The environment variable EXTERNAL_IP needs to be set for this test to
 // work.
-func TestExternalIP(t *testing.T) {
+func doTestExternalIP(t *testing.T, igd IGD) {
+	defer igd.Close()
+
 	expectedExternalIP := os.Getenv("EXTERNAL_IP")
 	if expectedExternalIP == "" {
 		t.Fatalf("Please set the environment variable EXTERNAL_IP to provide your expected public IP address")
 	}
 
-	igd, err := NewIGD()
-	if err != nil {
-		t.Fatalf("Unable to create IGD: %s", err)
-	}
-	defer igd.Close()
-
-	start := time.Now()
 	publicIp, err := igd.GetExternalIP()
 	if err != nil {
 		t.Fatalf("Unable to get Public IP: %s", err)
 	}
-	delta1 := time.Now().Sub(start)
 	if publicIp != expectedExternalIP {
 		t.Errorf("External ip '%s' did not match expected '%s'", publicIp, expectedExternalIP)
 	}
-	start = time.Now()
 	publicIp, err = igd.GetExternalIP()
 	if err != nil {
 		t.Fatalf("Unable to get External IP 2nd time: %s", err)
 	}
-	delta2 := time.Now().Sub(start)
-	if delta2 > delta1/10 {
-		t.Fatalf("2nd external ip lookup should have been much faster than first because of cached IGD url.  1st lookup: %d ms, 2nd lookup: %d ms", delta1/time.Millisecond, delta2/time.Millisecond)
-	}
 }
 
-func TestMapping(t *testing.T) {
+func doTestMapping(t *testing.T, igd IGD) {
 	port := 15067
-
-	igd, err := NewIGD()
-	if err != nil {
-		t.Fatalf("Unable to create IGD: %s", err)
-	}
 	defer igd.Close()
 
 	externalIP, err := igd.GetExternalIP()
@@ -134,13 +165,8 @@ func TestMapping(t *testing.T) {
 	}
 }
 
-func TestFailedAddMapping(t *testing.T) {
+func doTestFailedAddMapping(t *testing.T, igd IGD) {
 	port := 15068
-
-	igd, err := NewIGD()
-	if err != nil {
-		t.Fatalf("Unable to create IGD: %s", err)
-	}
 	defer igd.Close()
 
 	// Add port mapping
@@ -155,14 +181,10 @@ func TestFailedAddMapping(t *testing.T) {
 	}
 }
 
-func TestFailedRemoveMapping(t *testing.T) {
-	igd, err := NewIGD()
-	if err != nil {
-		t.Fatalf("Unable to create IGD: %s", err)
-	}
+func doTestFailedRemoveMapping(t *testing.T, igd IGD) {
 	defer igd.Close()
 
-	err = igd.RemovePortMapping(TCP, -1)
+	err := igd.RemovePortMapping(TCP, -1)
 	if err == nil {
 		t.Error("Removing mapping for bad port should have resulted in error")
 	}

@@ -3,6 +3,7 @@ package igdman
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/oxtoacart/byteexec"
@@ -15,10 +16,11 @@ const (
 )
 
 type upnpIGD struct {
-	upnpc      *byteexec.ByteExec
-	igdUrl     string
-	internalIP string
-	externalIP string
+	upnpc             *byteexec.ByteExec
+	igdUrl            string
+	internalIP        string
+	externalIP        string
+	updateStatusMutex sync.Mutex
 }
 
 func newUpnpIGD() (igd *upnpIGD, err error) {
@@ -34,7 +36,7 @@ func newUpnpIGD() (igd *upnpIGD, err error) {
 }
 
 func (igd *upnpIGD) GetExternalIP() (ip string, err error) {
-	err = igd.updateStatus()
+	err = igd.updateStatusIfNecessary()
 	if err != nil {
 		return "", err
 	}
@@ -42,7 +44,7 @@ func (igd *upnpIGD) GetExternalIP() (ip string, err error) {
 }
 
 func (igd *upnpIGD) AddPortMapping(proto protocol, internalIP string, internalPort int, externalPort int, expiration time.Duration) error {
-	if err := igd.updateStatus(); err != nil {
+	if err := igd.updateStatusIfNecessary(); err != nil {
 		return fmt.Errorf("Unable to add port mapping: %s", err)
 	}
 	params := []string{
@@ -63,7 +65,7 @@ func (igd *upnpIGD) AddPortMapping(proto protocol, internalIP string, internalPo
 }
 
 func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
-	if err := igd.updateStatus(); err != nil {
+	if err := igd.updateStatusIfNecessary(); err != nil {
 		return fmt.Errorf("Unable to add port mapping: %s", err)
 	}
 	params := []string{
@@ -82,6 +84,15 @@ func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
 
 func (igd *upnpIGD) Close() error {
 	return igd.upnpc.Close()
+}
+
+func (igd *upnpIGD) updateStatusIfNecessary() error {
+	igd.updateStatusMutex.Lock()
+	defer igd.updateStatusMutex.Unlock()
+	if igd.igdUrl == "" {
+		return igd.updateStatus()
+	}
+	return nil
 }
 
 // updateStatus updates the IGD's status fields
