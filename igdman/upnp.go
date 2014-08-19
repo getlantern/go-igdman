@@ -2,6 +2,7 @@ package igdman
 
 import (
 	"fmt"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -74,7 +75,7 @@ func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
 		"-url", igd.igdUrl,
 		"-d", fmt.Sprintf("%d", externalPort), string(proto),
 	}
-	out, err := igd.upnpc.Command(params...).CombinedOutput()
+	out, err := execTimeout(30*time.Second, igd.upnpc.Command(params...))
 	if err != nil {
 		return fmt.Errorf("Unable to remove port mapping: %s\n%s", err, out)
 	} else if !strings.Contains(string(out), "UPNP_DeletePortMapping() returned : 0") {
@@ -104,7 +105,7 @@ func (igd *upnpIGD) updateStatus() error {
 	if skipDiscovery {
 		params = []string{"-url", igd.igdUrl, "-s"} // -s has to be at the end for some reason
 	}
-	out, err := igd.upnpc.Command(params...).CombinedOutput()
+	out, err := execTimeout(30*time.Second, igd.upnpc.Command(params...))
 	if err != nil {
 		if skipDiscovery {
 			// Clear remembered url and try again
@@ -144,4 +145,26 @@ func (igd *upnpIGD) extractFromStatusResponse(resp string, label string) (string
 		return "", fmt.Errorf("Unable to find newline after %s", label)
 	}
 	return resp[:s], nil
+}
+
+func execTimeout(timeout time.Duration, cmd *exec.Cmd) ([]byte, error) {
+	resultCh := make(chan *execResult, 1)
+
+	go func() {
+		out, err := cmd.CombinedOutput()
+		resultCh <- &execResult{out, err}
+	}()
+
+	select {
+	case <-time.After(timeout):
+		cmd.Process.Kill()
+		return nil, fmt.Errorf("Command timed out")
+	case result := <-resultCh:
+		return result.output, result.err
+	}
+}
+
+type execResult struct {
+	output []byte
+	err    error
 }
