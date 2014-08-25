@@ -2,7 +2,7 @@ package igdman
 
 import (
 	"fmt"
-	"github.com/oxtoacart/framed"
+	"github.com/getlantern/framed"
 	"net"
 	"os"
 	"testing"
@@ -105,15 +105,16 @@ func doTestMapping(t *testing.T, igd IGD) {
 			if err != nil {
 				t.Fatalf("Unable to accept connection: %s", err)
 			}
-			f := framed.Framed{conn}
-			defer f.Close()
+			defer conn.Close()
+			fr := framed.NewReader(conn)
+			fw := framed.NewWriter(conn)
 			frame := make([]byte, 1000)
 			for {
-				n, err := f.Read(frame)
+				n, err := fr.Read(frame)
 				if err != nil {
 					return
 				}
-				_, err = f.Write(frame[:n])
+				_, err = fw.Write(frame[:n])
 				if err != nil {
 					return
 				}
@@ -137,15 +138,16 @@ func doTestMapping(t *testing.T, igd IGD) {
 	if err != nil {
 		t.Fatalf("Unable to connect to echo server")
 	}
-	f := framed.Framed{conn}
-	defer f.Close()
+	defer conn.Close()
+	fr := framed.NewReader(conn)
+	fw := framed.NewWriter(conn)
 	testString := "Hello strange port mapped world"
-	_, err = f.Write([]byte(testString))
+	_, err = fw.Write([]byte(testString))
 	if err != nil {
 		t.Fatalf("Unable to write to echo server")
 	}
 	frame := make([]byte, 1000)
-	n, err := f.Read(frame)
+	n, err := fr.Read(frame)
 	if err != nil {
 		t.Fatalf("Unable to read from echo server")
 	}
