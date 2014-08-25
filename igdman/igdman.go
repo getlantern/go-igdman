@@ -22,6 +22,7 @@
 package igdman
 
 import (
+	"log"
 	"time"
 )
 
@@ -53,6 +54,7 @@ type IGD interface {
 func NewIGD() (igd IGD, err error) {
 	igd, err = NewUpnpIGD()
 	if err != nil {
+		log.Printf("Unable to initialize UPnP IGD, falling back to NAT-PMP: %s", err)
 		igd, err = NewNATPMPIGD()
 	}
 	return
