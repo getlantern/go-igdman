@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	natpmp "code.google.com/p/go-nat-pmp"
+	natpmp "github.com/jackpal/go-nat-pmp"
 )
 
 type natpmpIGD struct {

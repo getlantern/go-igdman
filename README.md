@@ -11,4 +11,4 @@ Acknowledgements:
 igdman is just a wrapper around:
 
 - [miniupnpc](https://github.com/miniupnp/miniupnp)
-- [go-nat-pmp](https://code.google.com/p/go-nat-pmp/)
+- [go-nat-pmp](https://github.com/jackpal/go-nat-pmp)
