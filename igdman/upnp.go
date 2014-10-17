@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/oxtoacart/byteexec"
+	"github.com/getlantern/byteexec"
 )
 
 const (
