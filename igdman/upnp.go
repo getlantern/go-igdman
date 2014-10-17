@@ -29,7 +29,7 @@ func NewUpnpIGD() (igd *upnpIGD, err error) {
 	if err != nil {
 		return nil, err
 	}
-	be, err := byteexec.NewByteExec(upnpcBytes)
+	be, err := byteexec.NewNamedByteExec(upnpcBytes, "upnpc")
 	if err != nil {
 		return nil, err
 	}
