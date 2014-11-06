@@ -16,8 +16,23 @@ const (
 	EXTERNAL_IP_ADDRESS_LABEL = "ExternalIPAddress = "
 )
 
+var (
+	upnpcbe *byteexec.ByteExec
+)
+
+func init() {
+	upnpcBytes, err := Asset("upnpc")
+	if err != nil {
+		panic(fmt.Errorf("Unable to read upnpc bytes: %s", err))
+	}
+
+	upnpcbe, err = byteexec.New(upnpcBytes, "upnpc")
+	if err != nil {
+		panic(fmt.Errorf("Unable to construct byteexec for upnpc: %s", err))
+	}
+}
+
 type upnpIGD struct {
-	upnpc             *byteexec.ByteExec
 	igdUrl            string
 	internalIP        string
 	externalIP        string
@@ -25,15 +40,7 @@ type upnpIGD struct {
 }
 
 func NewUpnpIGD() (igd *upnpIGD, err error) {
-	upnpcBytes, err := Asset("upnpc")
-	if err != nil {
-		return nil, err
-	}
-	be, err := byteexec.New(upnpcBytes, "upnpc")
-	if err != nil {
-		return nil, err
-	}
-	igd = &upnpIGD{upnpc: be}
+	igd = &upnpIGD{}
 	err = igd.updateStatus()
 	return
 }
@@ -57,7 +64,7 @@ func (igd *upnpIGD) AddPortMapping(proto protocol, internalIP string, internalPo
 	if expiration > 0 {
 		params = append(params, fmt.Sprintf("%d", expiration/time.Second))
 	}
-	out, err := igd.upnpc.Command(params...).CombinedOutput()
+	out, err := upnpcbe.Command(params...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("Unable to add port mapping: %s\n%s", err, out)
 	} else if strings.Contains(string(out), "failed with") {
@@ -75,7 +82,7 @@ func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
 		"-url", igd.igdUrl,
 		"-d", fmt.Sprintf("%d", externalPort), string(proto),
 	}
-	out, err := execTimeout(30*time.Second, igd.upnpc.Command(params...))
+	out, err := execTimeout(30*time.Second, upnpcbe.Command(params...))
 	if err != nil {
 		return fmt.Errorf("Unable to remove port mapping: %s\n%s", err, out)
 	} else if !strings.Contains(string(out), "UPNP_DeletePortMapping() returned : 0") {
@@ -101,7 +108,7 @@ func (igd *upnpIGD) updateStatus() error {
 	if skipDiscovery {
 		params = []string{"-url", igd.igdUrl, "-s"} // -s has to be at the end for some reason
 	}
-	out, err := execTimeout(30*time.Second, igd.upnpc.Command(params...))
+	out, err := execTimeout(30*time.Second, upnpcbe.Command(params...))
 	if err != nil {
 		if skipDiscovery {
 			// Clear remembered url and try again
