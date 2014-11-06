@@ -59,11 +59,6 @@ func (igd *natpmpIGD) RemovePortMapping(proto protocol, externalPort int) error 
 	return nil
 }
 
-func (igd *natpmpIGD) Close() error {
-	// nothing to close
-	return nil
-}
-
 func natpmpProtoFor(proto protocol) string {
 	return strings.ToLower(string(proto))
 }

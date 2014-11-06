@@ -29,7 +29,7 @@ func NewUpnpIGD() (igd *upnpIGD, err error) {
 	if err != nil {
 		return nil, err
 	}
-	be, err := byteexec.NewNamedByteExec(upnpcBytes, "upnpc")
+	be, err := byteexec.New(upnpcBytes, "upnpc")
 	if err != nil {
 		return nil, err
 	}
@@ -83,10 +83,6 @@ func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
 	} else {
 		return nil
 	}
-}
-
-func (igd *upnpIGD) Close() error {
-	return igd.upnpc.Close()
 }
 
 func (igd *upnpIGD) updateStatusIfNecessary() error {
