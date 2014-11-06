@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	upnpcbe *byteexec.ByteExec
+	upnpcbe *byteexec.Exec
 )
 
 func init() {
