@@ -45,9 +45,6 @@ type IGD interface {
 
 	// RemovePortMapping removes the mapping from the given external port.
 	RemovePortMapping(proto protocol, externalPort int) error
-
-	// Close closes the IGD instance to clean up any open resources
-	Close() error
 }
 
 // NewIGD obtains a new IGD (either UPnP or NAT-PMP, depending on what's available)

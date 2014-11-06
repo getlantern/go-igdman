@@ -64,8 +64,6 @@ func getNATPMPIGD(t *testing.T) IGD {
 // IP.  The environment variable EXTERNAL_IP needs to be set for this test to
 // work.
 func doTestExternalIP(t *testing.T, igd IGD) {
-	defer igd.Close()
-
 	expectedExternalIP := os.Getenv("EXTERNAL_IP")
 	if expectedExternalIP == "" {
 		t.Fatalf("Please set the environment variable EXTERNAL_IP to provide your expected public IP address")
@@ -86,7 +84,6 @@ func doTestExternalIP(t *testing.T, igd IGD) {
 
 func doTestMapping(t *testing.T, igd IGD) {
 	port := 15067
-	defer igd.Close()
 
 	externalIP, err := igd.GetExternalIP()
 	if err != nil {
@@ -169,7 +166,6 @@ func doTestMapping(t *testing.T, igd IGD) {
 
 func doTestFailedAddMapping(t *testing.T, igd IGD) {
 	port := 15068
-	defer igd.Close()
 
 	// Add port mapping
 	internalIP, err := getFirstNonLoopbackAdapterAddr()
@@ -184,8 +180,6 @@ func doTestFailedAddMapping(t *testing.T, igd IGD) {
 }
 
 func doTestFailedRemoveMapping(t *testing.T, igd IGD) {
-	defer igd.Close()
-
 	err := igd.RemovePortMapping(TCP, -1)
 	if err == nil {
 		t.Error("Removing mapping for bad port should have resulted in error")
