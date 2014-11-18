@@ -1,7 +1,9 @@
 package igdman
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 	"sync"
@@ -82,7 +84,7 @@ func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
 		"-url", igd.igdUrl,
 		"-d", fmt.Sprintf("%d", externalPort), string(proto),
 	}
-	out, err := execTimeout(30*time.Second, upnpcbe.Command(params...))
+	out, err := execTimeout(opTimeout, upnpcbe.Command(params...))
 	if err != nil {
 		return fmt.Errorf("Unable to remove port mapping: %s\n%s", err, out)
 	} else if !strings.Contains(string(out), "UPNP_DeletePortMapping() returned : 0") {
@@ -108,7 +110,7 @@ func (igd *upnpIGD) updateStatus() error {
 	if skipDiscovery {
 		params = []string{"-url", igd.igdUrl, "-s"} // -s has to be at the end for some reason
 	}
-	out, err := execTimeout(30*time.Second, upnpcbe.Command(params...))
+	out, err := execTimeout(opTimeout, upnpcbe.Command(params...))
 	if err != nil {
 		if skipDiscovery {
 			// Clear remembered url and try again
@@ -151,11 +153,27 @@ func (igd *upnpIGD) extractFromStatusResponse(resp string, label string) (string
 }
 
 func execTimeout(timeout time.Duration, cmd *exec.Cmd) ([]byte, error) {
-	resultCh := make(chan *execResult, 1)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
 
+	b := bytes.NewBuffer([]byte{})
+	go io.Copy(b, stdout)
+	go io.Copy(b, stderr)
+
+	resultCh := make(chan *execResult, 1)
 	go func() {
-		out, err := cmd.CombinedOutput()
-		resultCh <- &execResult{out, err}
+		err := cmd.Wait()
+		resultCh <- &execResult{b.Bytes(), err}
 	}()
 
 	select {

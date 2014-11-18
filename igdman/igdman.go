@@ -34,6 +34,16 @@ const (
 	UDP = protocol("UDP")
 )
 
+var (
+	opTimeout = 10 * time.Second
+)
+
+type timeoutError struct{}
+
+func (timeoutError) Error() string   { return "igdman: Operation timed out" }
+func (timeoutError) Timeout() bool   { return true }
+func (timeoutError) Temporary() bool { return true }
+
 // Interface IGD represents an Internet Gateway Device.
 type IGD interface {
 	// GetExternalIP returns the IGD's external (public) IP address
@@ -55,4 +65,24 @@ func NewIGD() (igd IGD, err error) {
 		igd, err = NewNATPMPIGD()
 	}
 	return
+}
+
+func doWithTimeout(timeout time.Duration, fn func() (interface{}, error)) (interface{}, error) {
+	resultCh := make(chan interface{})
+	errCh := make(chan error)
+	time.AfterFunc(timeout, func() {
+		errCh <- timeoutError{}
+	})
+
+	go func() {
+		result, err := fn()
+		errCh <- err
+		resultCh <- result
+	}()
+
+	err := <-errCh
+	if err != nil {
+		return nil, err
+	}
+	return <-resultCh, err
 }
