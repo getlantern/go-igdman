@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getlantern/withtimeout"
 	natpmp "github.com/jackpal/go-nat-pmp"
 )
 
@@ -23,7 +24,7 @@ func NewNATPMPIGD() (igd *natpmpIGD, err error) {
 }
 
 func (igd *natpmpIGD) GetExternalIP() (ip string, err error) {
-	result, err := doWithTimeout(opTimeout, func() (interface{}, error) {
+	result, _, err := withtimeout.Do(opTimeout, func() (interface{}, error) {
 		response, err := igd.client.GetExternalAddress()
 		if err != nil {
 			return "", fmt.Errorf("Unable to get external address: %s", err)
@@ -32,21 +33,13 @@ func (igd *natpmpIGD) GetExternalIP() (ip string, err error) {
 			response.ExternalIPAddress[1],
 			response.ExternalIPAddress[2],
 			response.ExternalIPAddress[3]).String()
-		return response, err
+		return ip, err
 	})
-	if err != nil {
-		return "", err
-	}
-	response := result.(*natpmp.GetExternalAddressResult)
-	ip = net.IPv4(response.ExternalIPAddress[0],
-		response.ExternalIPAddress[1],
-		response.ExternalIPAddress[2],
-		response.ExternalIPAddress[3]).String()
-	return
+	return result.(string), err
 }
 
 func (igd *natpmpIGD) AddPortMapping(proto protocol, internalIP string, internalPort int, externalPort int, expiration time.Duration) error {
-	_, err := doWithTimeout(opTimeout, func() (interface{}, error) {
+	_, _, err := withtimeout.Do(opTimeout, func() (interface{}, error) {
 		expirationInSeconds := int(expiration.Seconds())
 		if expirationInSeconds == 0 {
 			expirationInSeconds = int(math.MaxInt32)
@@ -65,7 +58,7 @@ func (igd *natpmpIGD) AddPortMapping(proto protocol, internalIP string, internal
 }
 
 func (igd *natpmpIGD) RemovePortMapping(proto protocol, externalPort int) error {
-	_, err := doWithTimeout(opTimeout, func() (interface{}, error) {
+	_, _, err := withtimeout.Do(opTimeout, func() (interface{}, error) {
 		someInternalPort := 15670 // actual value doesn't matter
 		_, err := igd.client.AddPortMapping(natpmpProtoFor(proto), someInternalPort, externalPort, 0)
 		if err != nil {

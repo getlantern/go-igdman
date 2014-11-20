@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/getlantern/byteexec"
+	"github.com/getlantern/withtimeout"
 )
 
 const (
@@ -170,22 +171,14 @@ func execTimeout(timeout time.Duration, cmd *exec.Cmd) ([]byte, error) {
 	go io.Copy(b, stdout)
 	go io.Copy(b, stderr)
 
-	resultCh := make(chan *execResult, 1)
-	go func() {
-		err := cmd.Wait()
-		resultCh <- &execResult{b.Bytes(), err}
-	}()
-
-	select {
-	case <-time.After(timeout):
+	_, _, err = withtimeout.DoOr(timeout, func() (interface{}, error) {
+		return nil, cmd.Wait()
+	}, func() {
 		cmd.Process.Kill()
-		return nil, fmt.Errorf("Command timed out")
-	case result := <-resultCh:
-		return result.output, result.err
-	}
-}
+	})
 
-type execResult struct {
-	output []byte
-	err    error
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
