@@ -40,9 +40,7 @@ var (
 
 type timeoutError struct{}
 
-func (timeoutError) Error() string   { return "igdman: Operation timed out" }
-func (timeoutError) Timeout() bool   { return true }
-func (timeoutError) Temporary() bool { return true }
+func (timeoutError) Error() string { return "igdman: Operation timed out" }
 
 // Interface IGD represents an Internet Gateway Device.
 type IGD interface {
