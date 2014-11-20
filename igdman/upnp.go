@@ -174,7 +174,7 @@ func execTimeout(timeout time.Duration, cmd *exec.Cmd) ([]byte, error) {
 	_, _, err = withtimeout.DoOr(timeout, func() (interface{}, error) {
 		return nil, cmd.Wait()
 	}, func() {
-		cmd.Process.Kill()
+		go cmd.Process.Kill()
 	})
 
 	if err != nil {
