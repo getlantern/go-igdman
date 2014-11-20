@@ -36,9 +36,13 @@ func (igd *natpmpIGD) GetExternalIP() (ip string, err error) {
 	})
 	if err != nil {
 		return "", err
-	} else {
-		return result.(string), err
 	}
+	response := result.(*natpmp.GetExternalAddressResult)
+	ip = net.IPv4(response.ExternalIPAddress[0],
+		response.ExternalIPAddress[1],
+		response.ExternalIPAddress[2],
+		response.ExternalIPAddress[3]).String()
+	return
 }
 
 func (igd *natpmpIGD) AddPortMapping(proto protocol, internalIP string, internalPort int, externalPort int, expiration time.Duration) error {

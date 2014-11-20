@@ -69,7 +69,7 @@ func NewIGD() (igd IGD, err error) {
 
 func doWithTimeout(timeout time.Duration, fn func() (interface{}, error)) (interface{}, error) {
 	resultCh := make(chan interface{})
-	errCh := make(chan error)
+	errCh := make(chan error, 2)
 	time.AfterFunc(timeout, func() {
 		errCh <- timeoutError{}
 	})
