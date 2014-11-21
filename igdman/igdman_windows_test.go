@@ -19,8 +19,9 @@ func getFirstNonLoopbackAdapterAddr() (string, error) {
 
 	for _, a := range addrs {
 		ip := net.ParseIP(a)
-		if !ip.IsLoopback() {
-			return a, nil
+		ip4 := ip.To4()
+		if ip4 != nil && !ip.IsLoopback() {
+			return ip4.String(), nil
 		}
 	}
 
