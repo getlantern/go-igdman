@@ -1,13 +1,16 @@
 package igdman
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/getlantern/byteexec"
+	"github.com/getlantern/withtimeout"
 )
 
 const (
@@ -82,7 +85,7 @@ func (igd *upnpIGD) RemovePortMapping(proto protocol, externalPort int) error {
 		"-url", igd.igdUrl,
 		"-d", fmt.Sprintf("%d", externalPort), string(proto),
 	}
-	out, err := execTimeout(30*time.Second, upnpcbe.Command(params...))
+	out, err := execTimeout(opTimeout, upnpcbe.Command(params...))
 	if err != nil {
 		return fmt.Errorf("Unable to remove port mapping: %s\n%s", err, out)
 	} else if !strings.Contains(string(out), "UPNP_DeletePortMapping() returned : 0") {
@@ -108,7 +111,7 @@ func (igd *upnpIGD) updateStatus() error {
 	if skipDiscovery {
 		params = []string{"-url", igd.igdUrl, "-s"} // -s has to be at the end for some reason
 	}
-	out, err := execTimeout(30*time.Second, upnpcbe.Command(params...))
+	out, err := execTimeout(opTimeout, upnpcbe.Command(params...))
 	if err != nil {
 		if skipDiscovery {
 			// Clear remembered url and try again
@@ -151,23 +154,31 @@ func (igd *upnpIGD) extractFromStatusResponse(resp string, label string) (string
 }
 
 func execTimeout(timeout time.Duration, cmd *exec.Cmd) ([]byte, error) {
-	resultCh := make(chan *execResult, 1)
-
-	go func() {
-		out, err := cmd.CombinedOutput()
-		resultCh <- &execResult{out, err}
-	}()
-
-	select {
-	case <-time.After(timeout):
-		cmd.Process.Kill()
-		return nil, fmt.Errorf("Command timed out")
-	case result := <-resultCh:
-		return result.output, result.err
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
 	}
-}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
 
-type execResult struct {
-	output []byte
-	err    error
+	b := bytes.NewBuffer([]byte{})
+	go io.Copy(b, stdout)
+	go io.Copy(b, stderr)
+
+	_, timedOut, err := withtimeout.Do(timeout, func() (interface{}, error) {
+		return nil, cmd.Wait()
+	})
+	if err != nil {
+		if timedOut {
+			go cmd.Process.Kill()
+		}
+		return nil, err
+	}
+	return b.Bytes(), nil
 }

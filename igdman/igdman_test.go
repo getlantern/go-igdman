@@ -2,10 +2,11 @@ package igdman
 
 import (
 	"fmt"
-	"github.com/getlantern/framed"
 	"net"
 	"os"
 	"testing"
+
+	"github.com/getlantern/framed"
 )
 
 var (
@@ -184,25 +185,4 @@ func doTestFailedRemoveMapping(t *testing.T, igd IGD) {
 	if err == nil {
 		t.Error("Removing mapping for bad port should have resulted in error")
 	}
-}
-
-func getFirstNonLoopbackAdapterAddr() (string, error) {
-	name, err := os.Hostname()
-	if err != nil {
-		return "", err
-	}
-
-	addrs, err := net.LookupHost(name)
-	if err != nil {
-		return "", err
-	}
-
-	for _, a := range addrs {
-		ip := net.ParseIP(a)
-		if !ip.IsLoopback() {
-			return a, nil
-		}
-	}
-
-	return "", fmt.Errorf("No non-loopback adapter found")
 }

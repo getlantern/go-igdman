@@ -34,6 +34,10 @@ const (
 	UDP = protocol("UDP")
 )
 
+var (
+	opTimeout = 10 * time.Second
+)
+
 // Interface IGD represents an Internet Gateway Device.
 type IGD interface {
 	// GetExternalIP returns the IGD's external (public) IP address
