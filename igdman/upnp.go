@@ -171,13 +171,13 @@ func execTimeout(timeout time.Duration, cmd *exec.Cmd) ([]byte, error) {
 	go io.Copy(b, stdout)
 	go io.Copy(b, stderr)
 
-	_, _, err = withtimeout.DoOr(timeout, func() (interface{}, error) {
+	_, timedOut, err := withtimeout.Do(timeout, func() (interface{}, error) {
 		return nil, cmd.Wait()
-	}, func() {
-		go cmd.Process.Kill()
 	})
-
 	if err != nil {
+		if timedOut {
+			go cmd.Process.Kill()
+		}
 		return nil, err
 	}
 	return b.Bytes(), nil
